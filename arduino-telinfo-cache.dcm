@@ -1,9 +1,0 @@
-EESchema-DOCLIB  Version 2.0
-#
-$CMP Oled
-D OLED Display I2C
-K OLED Display I2C
-F ~
-$ENDCMP
-#
-#End Doc Library
