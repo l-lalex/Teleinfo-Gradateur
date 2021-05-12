@@ -9,4 +9,4 @@ On fait varier la puissance du chauffe-eau de manière à ce que le papp (puissa
 
 On utilise un gradateur numérique contrôlant la puissance de 0 à 100% que l'on pilote par impulsions, le nombre d'impulsions dépend de la puissance à réduire.
 
-Interface WEB de suivi.
+Interface WEB de suivi s'appuyant sur le wifi de l'ESP8366
