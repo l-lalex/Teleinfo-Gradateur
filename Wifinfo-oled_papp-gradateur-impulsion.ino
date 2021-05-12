@@ -57,6 +57,8 @@ SSD1306Wire display(0x3c, SDA, SCL);
  unsigned int gradateur; 
 unsigned long previousMillis = 0;
 bool premier_bypass = true;
+unsigned int Cumulus = 2000; //puissance de la résistance du cumulus en watts
+unsigned int pulses; //calcul du nombre d'impulsions
 bool ota_blink;
 char buffer[20];                // Buffer pour convertir en chaine de l'adresse IP de l'appareil
   unsigned int mypapp;
@@ -92,6 +94,26 @@ unsigned long seconds = 0;
 
 // sysinfo data
 _sysinfo sysinfo;
+/* ======================================================================
+Function: Gradateur_plus 
+Purpose : envoyer un nombre d'impulsions montant la puissance du chauffe eau
+Input   : nombre d'impulsions
+          
+Output  : - 
+Comments: -
+====================================================================== */
+void Gradateur_moins(unsigned int nb_pulse)
+{
+  for (int i=0; i < nb_pulse; i++)
+                    { 
+                    digitalWrite(UP, HIGH);
+                    delay(100);
+                    digitalWrite(UP, LOW);
+                    delay(100);
+                    gradateur --;
+                    if (gradateur < 1)  gradateur = 0;
+                    }
+}
 
 /* ======================================================================
 Function: UpdateSysinfo 
@@ -618,6 +640,8 @@ void setup()
   digitalWrite(UP, LOW);
   pinMode(DOWN,OUTPUT);
   digitalWrite(DOWN, LOW);
+
+  
   //pinMode(BYPASS,INPUT_PULLUP);
   //NO_Bypass = digitalRead(BYPASS);   // lecture du switch  0 si bypass
   //*/
@@ -958,7 +982,10 @@ display.clear();
                 if (mypapp != oldpapp) 
                             {
                             oldpapp = mypapp;
-                            if (mypapp >= 2000) regul = 410;
+                            if (mypapp >= 2000) 
+                              {
+                                regul = 410;
+                              }
                             if (mypapp <= 50 )
                               { 
                               regul = regul - 5; 
@@ -970,10 +997,13 @@ display.clear();
                             if (mypapp >= 50) 
                               {
                               regul = regul + 5;
-                              digitalWrite(DOWN, HIGH);
+                              //nombre d'impulsions
+                              pulses =(mypapp / Cumulus) * 100;
+                              Gradateur_moins(pulses);
+                              /*digitalWrite(DOWN, HIGH);
                               delay(100);
                               digitalWrite(DOWN, LOW);
-                              gradateur --;
+                              gradateur --;*/
                               }
             
                             if (mypapp == 0 ) regul = 350;
@@ -1002,8 +1032,8 @@ display.clear();
           analogWrite(LED,regul-1);
           
           //Correction gradateur
-          if (gradateur <= 1) gradateur = 1;
-          if (gradateur >= 16) gradateur = 16;
+          if (gradateur < 1) gradateur = 0;
+          if (gradateur > 99) gradateur = 100;
           
           //affichage de l'ip et de l'atténuation ip = 192.168.4.1 si AP wifi
           //Adresse IP
@@ -1013,15 +1043,15 @@ display.clear();
           if (ipStr == "0.0.0.0") display.drawString(0, 31, "IP: 192.168.4.1" );         
           else display.drawString(0, 31, "IP: " + String(buffer) );
           //calcul de la puissance cumulus 
-          int pwr_ca = round((410- regul)/1.10);
-          display.drawString(0, 46, "Cumulus: " + String(pwr_ca) + " / " + String(gradateur-1) );
+          //int pwr_ca = round((410- regul)/1.10);
+          display.drawString(0, 46, "Cumulus: " +  String(gradateur) );
           display.display();
           
           //Ajout de papp dans le tableau web
           //static uint8_t test = 0;
 
           char buf[5];
-          String str = String(pwr_ca);
+          String str = String(gradateur);
           str.toCharArray(buf,5); 
 
           uint8_t anotherflag = TINFO_FLAGS_NONE;
